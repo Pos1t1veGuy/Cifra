@@ -1,25 +1,43 @@
 from typing import Union
 
 class Roman:
-    def __init__(self, num: Union[str, int, float]):
+    def __init__(self, num: Union[str, int, float], sep: str = ' + ', threshold: int = 20_000):
+        self.sep = sep
+        self.threshold = threshold
+
         if isinstance(num, str):
-            self.int = self.roman_to_int(num)
-            self.roman = self.int_to_roman(self.int)
+            self.int = self.roman_to_int(num, sep = self.sep)
+            self.roman = self.int_to_roman(self.int, sep = self.sep)
 
         elif isinstance(num, int) or isinstance(num, float):
-            self.roman = self.int_to_roman(num)
-            self.int = self.roman_to_int(self.roman)
+            self.roman = self.int_to_roman(num, sep = self.sep)
+            self.int = self.roman_to_int(self.roman, sep = self.sep)
 
         else:
             raise ValueError(f'Arg0: (Union[str, int, float]) must be number (int or float for highlight the integer part) or string (roman number str), not {type(num)} {num}')
 
+        self.reduced_roman = self.reduce_roman(self.roman, sep = self.sep)
+
 
     @staticmethod
-    def roman_to_int(roman: str) -> int:
+    def reduce_roman(roman: str, sep: str = ' + ') -> str:
+        parts = roman.split(sep)
+        return f'MMMCMXCIX*{len(parts)-1} + {parts[-1]}' if len(parts) > 1 else parts[0]
+
+    @staticmethod
+    def roman_to_int(roman: str, sep: str = ' + ') -> int:
         total = 0
 
-        for i, part in enumerate(roman.replace(' ', '').split('+')):
+        for i, part in enumerate(roman.split(sep)):
             if Roman.is_valid_roman(part):
+                if '*' in part and part.split('*')[0] == 'MMMCMXCIX':
+                    try:
+                        total += 3999 * int(part.split('*')[1])
+                        continue
+
+                    except ValueError:
+                        raise ValueError(f'Arg0: (str) number {part} at {i}th augmentation is incorrect')
+
                 m = {
                     'I': 1,
                     'V': 5,
@@ -42,7 +60,7 @@ class Roman:
         return total
 
     @staticmethod
-    def int_to_roman(num: Union[str, int, float]) -> str:
+    def int_to_roman(num: Union[str, int, float], sep: str = ' + ') -> str:
         num = int(num)
         roman_numerals = {
             1000: "M",
@@ -64,10 +82,10 @@ class Roman:
                 roman_num += symbol
                 normal -= value
         
-        return augments * "MMMCMXCIX + " + roman_num
+        return augments * f"MMMCMXCIX{sep}" + roman_num
 
     @staticmethod
-    def is_valid_roman(roman: str) -> bool:
+    def is_valid_roman(roman: str, sep: str = ' + ') -> bool:
         roman_numerals = {
             'I': 1, 'V': 5, 'X': 10,
             'L': 50, 'C': 100, 'D': 500, 'M': 1000
@@ -76,10 +94,19 @@ class Roman:
         prev_value = 0
         consecutive_occurrences = 0
 
-        for part in roman.replace(' ', '').split('+'):
+        for part in roman.split(sep):
             for numeral in reversed(part):
-                if numeral not in roman_numerals:
-                    return False
+                if '*' in part and part.split('*')[0] == 'MMMCMXCIX':
+                    try:
+                        int(part.split('*')[1])
+                        continue
+
+                    except ValueError:
+                        return False
+
+                else:
+                    if numeral not in roman_numerals:
+                        return False
                 
                 value = roman_numerals[numeral]
                 
@@ -199,7 +226,7 @@ class Roman:
         return Roman( int(''.join(reversed(str(self.int)))) )
     
     def __str__(self):
-        return self.roman
+        return self.roman if self.int < self.threshold else self.reduced_roman
     def __int__(self):
         return self.int
     def __repr__(self):

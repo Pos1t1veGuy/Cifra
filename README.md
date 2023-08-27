@@ -3,7 +3,7 @@ It has some ciphers and number systems, for start we must to download library.
 
 
 # Downloading
-Cloning this repository:
+Clone this repository:
 ```
 git clone https://github.com/Pos1t1veGuy/cifra
 ```
@@ -111,6 +111,32 @@ To bypass the limit cifra.Roman use augments. It adds "MMMCMXCIX + " to roman nu
 1
 ```
 'len(cifra.Roman)' returns a count of augments.
+
+You can change augments separator in 'sep' kwarg in static methods or in cifra.Roman constructor:
+```
+>>> from cifra import Roman
+>>> str(Roman(4000, sep='-'))
+'MMMCMXCIX-I'
+>>> Roman.int_to_roman(8000, sep='+')
+'MMMCMXCIX+MMMCMXCIX+II'
+```
+
+If the number is large enough ( more than Roman threshold ), it will be reduced:
+```
+>>> from cifra import Roman
+>>> str(Roman(200_000))
+'MMMCMXCIX*50 + L'
+>>> str(Roman(20_000))
+'MMMCMXCIX*5 + V'
+```
+You can change Roman threshold in constructor:
+```
+>>> from cifra import Roman
+>>> str(Roman(25_000))
+'MMMCMXCIX*6 + MVI'
+>>> str(Roman(25_000, threshold=26_000))
+'MMMCMXCIX + MMMCMXCIX + MMMCMXCIX + MMMCMXCIX + MMMCMXCIX + MMMCMXCIX + MVI'
+```
 
 
 # Ciphers
